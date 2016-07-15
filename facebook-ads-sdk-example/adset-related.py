@@ -58,7 +58,7 @@ class AdSetManager(BasicManager):
 		except Exception as e:
 			logger.exception(e)
 
-	def create_adsets(self, now, logger):
+	def create_adset(self, fb_account_id, fb_campaign_id, logger):
 		error_reasons = []
 		adset_infos = []
 		adset_error_infos = []
@@ -107,6 +107,8 @@ class AdSetManager(BasicManager):
 			MAX_ADSET_NUM_PER_BATCH = 25
 			for i in range(100):
 				
+				ad_set = AdSet(parent_id='act_' + str(fb_account_id))
+
 				callback_failure = partial(
 					callback_failure,
 					adset_info = adset_info,
