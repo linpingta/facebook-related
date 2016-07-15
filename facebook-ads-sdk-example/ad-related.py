@@ -101,3 +101,10 @@ class AdManager(BasicManager):
 				ad.remote_delete()
 		except Exception as e:
 			logger.exception(e)
+
+	def get_reach_estimate(self, ad_id, logger):
+		try:
+			ad = Ad(str(ad_id))
+			return ad.get_reach_estimate()
+		except Exception as e:
+			logger.exception(e)

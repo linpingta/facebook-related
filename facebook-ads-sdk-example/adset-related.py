@@ -6,7 +6,10 @@ import unittest
 from basic import BasicManager, BasicManagerTest
 from facebookads.specs import ObjectStorySpec, LinkData, AttachmentData, VideoData
 from facebookads.objects import (
+	AdAccount,
+	Campaign,
 	AdSet,
+	TargetingSpecsField,
 )
 
 
@@ -153,5 +156,85 @@ class AdSetManager(BasicManager):
 			if fb_adset_id > 0:
 				adset = AdSet(str(fb_adset_id))
 				adset.remote_delete()
+		except Exception as e:
+			logger.exception(e)
+
+	def paused_adset(self, fb_adset_id, logger):
+		try:
+			print fb_adset_id
+			adset = AdSet(str(fb_adset_id))
+			adset.update({
+				AdSet.Field.status: AdSet.Status.paused,
+			})
+			print str(adset[AdSet.Field.status])
+			adset.remote_update()
+		except Exception as e:
+			logger.exception(e)
+
+	def get_adset_status(self, adset_id, logger):
+		try:
+			print 'adset', adset_id
+			adset = AdSet(str(adset_id))
+			adset.remote_read(fields=[
+				AdSet.Field.id,
+				AdSet.Field.status,
+				AdSet.Field.targeting
+			])
+			print 'adset_status', adset[AdSet.Field.id], adset[AdSet.Field.status]
+			targeting = adset[AdSet.Field.targeting]
+			print targeting
+		except Exception as e:
+			logger.exception(e)
+
+	def generate_batches(self, iterable, batch_size_limit):
+		"""
+		Generator that yields lists of length size batch_size_limit containing
+		objects yielded by the iterable.
+		"""
+		batch = []
+
+		for item in iterable:
+			if len(batch) == batch_size_limit:
+				yield batch
+				batch = []
+			batch.append(item)
+
+		if len(batch):
+			yield batch
+
+	def get_adsets_under_account(self, fb_account_id, logger):
+		total_adsets = []
+		try:
+			account = AdAccount('act_'+str(fb_account_id))
+
+			related_adsets_iterator = account.get_ad_sets(
+				fields=[
+					AdSet.Field.status,
+					AdSet.Field.name,
+					AdSet.Field.id,
+				],
+				params={
+					AdSet.Field.status: [AdSet.Status.active],
+				}
+			)
+			ADSET_BATCH_LIMIT = 25
+
+			# Iterate over batches of active AdCampaign's
+			count = 0
+			for adsets in self.generate_batches(
+				related_adsets_iterator,
+				ADSET_BATCH_LIMIT,
+			):
+				api_batch = self.api.new_batch()
+
+				print 'count', count, len(adsets)
+				print adsets
+				total_adsets.extend(adsets)
+
+				api_batch.execute()
+
+			print 'total_adsets', len(total_adsets)
+			return total_adsets
+
 		except Exception as e:
 			logger.exception(e)

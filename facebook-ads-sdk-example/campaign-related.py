@@ -6,7 +6,9 @@ import unittest
 from basic import BasicManager, BasicManagerTest
 from facebookads.specs import ObjectStorySpec, LinkData, AttachmentData, VideoData
 from facebookads.objects import (
+	AdAccount,
 	Campaign,
+	AdSet,
 )
 
 
@@ -58,3 +60,40 @@ class CampaignManager(BasicManager):
 				logger.warning('fb_cpid[%d] invalid for fb delete' % fb_campaign_id)
 		except Exception as e:
 			logger.exception(e)
+
+	def query_campaign_info(self, campaign_id, logger):
+		try:
+			campaign = Campaign(str(campaign_id))
+			campaign.remote_read(fields=[
+				Campaign.Field.id,
+				Campaign.Field.name,
+				Campaign.Field.status,
+			])
+			print 'campaign info'
+			print campaign[Campaign.Field.id]
+			print campaign[Campaign.Field.name]
+			print campaign[Campaign.Field.status]
+		except Exception as e:
+			logger.exception(e)
+
+	def pause_adsets_in_campaign(self, fb_campaign_id, logger):
+		campaign = Campaign(str(fb_campaign_id))
+		try:
+			for adset in campaign.get_ad_sets([
+				AdSet.Field.id,
+				AdSet.Field.name,
+				AdSet.Field.status,
+			]):
+				print 'each adset'
+				fb_adset_id = int(adset[AdSet.Field.id])
+				print fb_adset_id
+				print str(adset[AdSet.Field.status])
+				adset = AdSet(str(fb_adset_id))
+				adset.update({
+					AdSet.Field.status: AdSet.Status.paused,
+				})
+				adset.remote_update()
+				print str(adset[AdSet.Field.status])
+		except Exception as e:
+			logger.exception(e)
+
