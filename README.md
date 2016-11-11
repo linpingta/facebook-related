@@ -7,7 +7,7 @@ Facebook Related Work, most for test and data fetch
     
 ### facebook-success-creatives
 
-    crawl https://www.facebook.com/business/success/ and get creatives inside it, written by nodejs, only for 
+    crawl https://www.facebook.com/business/success/ and get creatives inside it, written by nodejs, only for play
 
 ### facebook-fan-page-fetcher
 
