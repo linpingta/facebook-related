@@ -3,11 +3,17 @@ Facebook Related Work, most for test and data fetch
 
 ### facebook-ads-sdk-example
 
-    related example of Facebook Ads Python SDK call, based on campaign/adset/ad/creative/insight
+    Related example of Facebook Ads Python SDK call, based on:
+    
+        Campaign
+        Adset
+        Ad
+        Creative
+        Insight
     
 ### facebook-success-creatives
 
-    crawl https://www.facebook.com/business/success/ and get creatives inside it, written by nodejs, only for play
+    Crawl https://www.facebook.com/business/success/ and get creatives inside it, written by nodejs, only for play
 
 ### facebook-fan-page-fetcher
 
