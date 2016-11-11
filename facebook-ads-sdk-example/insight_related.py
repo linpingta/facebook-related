@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 # vim: set bg=dark noet ts=4 sw=4 fdm=indent :
 
-import unittest
 
-from basic import BasicManager, BasicManagerTest
 from facebookads.specs import ObjectStorySpec, LinkData, AttachmentData, VideoData
 from facebookads.objects import (
 	AdAccount,
@@ -11,28 +9,14 @@ from facebookads.objects import (
 	AdSet,
 	Ad,
 )
+from basic import APIManager
 
 
-class InsightManager(BasicManager):
-
+class InsightManager(APIManager):
+	""" Insight Manager
+	"""
 	def __init__(self, conf):
-		super(CampaignManager, self).__init__(conf)
-
-	def generate_batches(self, iterable, batch_size_limit):
-		"""
-		Generator that yields lists of length size batch_size_limit containing
-		objects yielded by the iterable.
-		"""
-		batch = []
-
-		for item in iterable:
-			if len(batch) == batch_size_limit:
-				yield batch
-				batch = []
-			batch.append(item)
-
-		if len(batch):
-			yield batch
+		super(InsightManager, self).__init__(conf)
 
 	def get_ads_stats(self, fb_account_id, ad_ids, start_dt, end_dt, logger):
 		try:
@@ -66,11 +50,11 @@ class InsightManager(BasicManager):
 		except Exception as e:
 			logger.exception(e)
 
-	def get_campaign_insight(self, campaign_id, start_dt, end_dt,logger):
-		campaign = Campaign(str(campaign_id))
+	def get_campaign_insight(self, fb_campaign_id, start_dt, end_dt,logger):
+		campaign = Campaign(str(fb_campaign_id))
 		params = {
 			'time_range':{'since':str(start_dt), 'until':str(end_dt)},
-			'level':'campaign_group',
+			'level':'campaign',
 		}
 		insights = campaign.get_insights(params=params)
 		for insight in insights:

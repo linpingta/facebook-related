@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # vim: set bg=dark noet ts=4 sw=4 fdm=indent :
 
-import sys, os
+import os
+import sys
 import time
 import datetime
 import logging
@@ -11,7 +12,6 @@ except:
 	import configparser as ConfigParser
 import simplejson as json
 import requests
-import unittest
 
 from facebookads import FacebookSession
 from facebookads import FacebookAdsApi
@@ -20,9 +20,9 @@ from facebookads.objects import (
 )
 
 
-class BasicManager(object):
-	''' 测试Facebook新功能
-	'''
+class APIManager(object):
+	""" Basic API Manager
+	"""
 	me = AdUser(fbid='me') # user account
 	
 	def __init__(self, conf):
@@ -33,31 +33,27 @@ class BasicManager(object):
 		self.api = FacebookAdsApi(self.session)
 		FacebookAdsApi.set_default_api(self.api)
 
+
+	def generate_batches(self, iterable, batch_size_limit):
+		"""
+		Generator that yields lists of length size batch_size_limit containing
+		objects yielded by the iterable.
+		"""
+		batch = []
+
+		for item in iterable:
+			if len(batch) == batch_size_limit:
+				yield batch
+				batch = []
+			batch.append(item)
+
+		if len(batch):
+			yield batch
+
 	def run(self, now, logger):
-		try:
-			logger.info('Hello, BasicManager Run')
-		except Exception as e:
-			logger.exception(e)
+		logger.info('Hello, Basic API Manager Run')
 
 
-class BasicManagerTest(unittest.TestCase):
-	''' Basic Manager Test
-	'''
-	def setUp(self):
-		basepath = os.path.abspath(os.getcwd())
-		confpath = os.path.join(basepath, 'conf/test.conf')
-		self.conf = ConfigParser.RawConfigParser()
-		self.conf.read(confpath)
-		
-		print basepath
-		logging.basicConfig(filename=os.path.join(basepath, 'logs/test.log'), level=logging.INFO,
-			format = '[%(filename)s:%(lineno)s - %(funcName)s %(asctime)s;%(levelname)s] %(message)s',
-			datefmt = '%a, %d %b %Y %H:%M:%S'
-			)
-		self.logger = logging.getLogger('Test')
-
-	def tearDown(self):
-		pass
 
 
 if __name__ == '__main__':

@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
 # vim: set bg=dark noet ts=4 sw=4 fdm=indent :
 
-import unittest
-
-from basic import BasicManager, BasicManagerTest
 from facebookads.specs import ObjectStorySpec, LinkData, AttachmentData, VideoData
 from facebookads.objects import (
+	AdAccount,
+	Campaign,
+	AdSet,
 	Ad,
+	TargetingSpecsField,
 )
+from basic import APIManager
 
 
-class AdManager(BasicManager):
+class AdManager(APIManager):
 
 	def __init__(self, conf):
 		super(AdManager, self).__init__(conf)
 
 	def create_ad(self, fb_account_id, fb_adset_id, fb_creative_id, logger):
+		""" create ad"""
 		try:
 			ad = Ad(parent_id='act_' + str(fb_account_id))
 			ad.update({
@@ -32,7 +35,7 @@ class AdManager(BasicManager):
 			logger.exception(e)
 
 	def create_ads(self, fb_account_id, fb_adset_id, fb_creative_id, logger):
-		''' create multi ads in one adset with one creative'''
+		""" create multi ads in one adset with one creative"""
 		error_reasons = []
 		ad_infos = []
 		ad_error_infos = []
@@ -93,18 +96,12 @@ class AdManager(BasicManager):
 			logger.exception(e)
 
 	def delete_ad(self, fb_ad_id, logger):
-		''' delete ad'''
+		""" delete ad"""
 		try:
 			logger.debug('delete fb_ad_id %d' % fb_ad_id)
 			if fb_ad_id > 0:
 				ad = Ad(str(fb_ad_id))
 				ad.remote_delete()
-		except Exception as e:
-			logger.exception(e)
 
-	def get_reach_estimate(self, ad_id, logger):
-		try:
-			ad = Ad(str(ad_id))
-			return ad.get_reach_estimate()
 		except Exception as e:
 			logger.exception(e)

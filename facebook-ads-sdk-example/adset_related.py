@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim: set bg=dark noet ts=4 sw=4 fdm=indent :
 
-import unittest
-
-from basic import BasicManager, BasicManagerTest
 from facebookads.specs import ObjectStorySpec, LinkData, AttachmentData, VideoData
 from facebookads.objects import (
 	AdAccount,
@@ -11,16 +8,22 @@ from facebookads.objects import (
 	AdSet,
 	TargetingSpecsField,
 )
+from basic import APIManager
 
 
-class AdSetManager(BasicManager):
+class AdSetManager(APIManager):
 
 	def __init__(self, conf):
 		super(AdSetManager, self).__init__(conf)
 
 	def create_adset(self, fb_account_id, fb_campaign_id, logger):
+		""" create adset
+		Please update promoted_object, billing_event/optimization_goal, targeting as you needed
+		"""
 		try:
-			bid_amount = 100 # means 100 cent
+			bid_amount = 100 # means 100 cent, 1 dollar
+			daily_budget = 1000 # means 10 dollars most spent every day
+			# is_autbid decide whether to use autobid
 		
 			# now
 			cur_time = int(time.time())
@@ -28,40 +31,60 @@ class AdSetManager(BasicManager):
 			end_time = cur_time + 360000
 
 			# promoted info
+			# you must promise object store url is the same type as user_os
 			promoted_object = {
 				"object_store_url": 'YOUR_OBJECT_STORE_URL', "application_id": 'YOUR_APPLICATION_ID'
 			}
 
 			# oCPM case
+			# other type as CPM, CPC, CPA, change billing_event , or optimization_goal
 			billing_event = AdSet.BillingEvent.impressions
 			optimization_goal = AdSet.OptimizationGoal.app_installs
 			
 			# targeting IOS example
-			adset_target_dict = {"geo_locations": {"countries": ["US"]}, "age_max": "42", "page_types": ["mobilefeed"], "user_os": ["iOS_ver_6.0_and_above"], "age_min": "28", "genders": [1]}
+			adset_target_dict = {
+				"geo_locations": {"countries": ["US"]}, 
+				"age_max": "42", 
+				"page_types": ["mobilefeed"], 
+				"user_os": ["iOS_ver_6.0_and_above"], 
+				"age_min": "28", 
+				"genders": [1]
+			}
+
 			# targeting Android example
-			#adset_target_dict = {"geo_locations": {"countries": ["US"]}, "age_max": "42", "page_types": ["mobilefeed"], "user_os": ["Android_ver_2.3_and_above"], "age_min": "28", "genders": [1]}
+			adset_target_dict = {
+				"geo_locations": {"countries": ["US"]}, 
+				"age_max": "42", 
+				"page_types": ["mobilefeed"], 
+				"user_os": ["Android_ver_2.3_and_above"],
+				"age_min": "28", 
+				"genders": [1]
+			}
 
 			# adset create
 			ad_set = AdSet(parent_id='act_' + str(fb_account_id))
 			ad_set.update({
-				AdSet.Field.name: 'video_test_5_adset',
+				AdSet.Field.name: 'adset_test',
 				AdSet.Field.status: AdSet.Status.active,
 				AdSet.Field.bid_amount: bid_amount,
 				AdSet.Field.billing_event : billing_event,
 				AdSet.Field.optimization_goal : optimization_goal,
 				AdSet.Field.promoted_object: json.dumps(promoted_object),
-				AdSet.Field.daily_budget: '1000',
+				AdSet.Field.daily_budget: str(daily_budget),
 				AdSet.Field.created_time: str(cur_time),
 				AdSet.Field.start_time: str(begin_time),
-				AdSet.Field.end_time: str(end_time),
-				AdSet.Field.campaign_group_id: str(fb_campaign_id),
+				#AdSet.Field.end_time: str(end_time),		# not necessary if no end time need in business		
+				AdSet.Field.campaign_group_id: str(fb_campaign_id),  # decide which campaign to created in
 				AdSet.Field.targeting: json.dumps(adset_target_dict)
 			})
 			ad_set.remote_create()
+			return int(ad_set[AdSet.Field.id])
+
 		except Exception as e:
 			logger.exception(e)
 
-	def create_adset(self, fb_account_id, fb_campaign_id, logger):
+	def create_adsets(self, fb_account_id, fb_campaign_id, logger):
+		""" Create multi-adsets with batch API"""
 		error_reasons = []
 		adset_infos = []
 		adset_error_infos = []
@@ -69,6 +92,8 @@ class AdSetManager(BasicManager):
 			api_batch = self.api.new_batch()
 
 			bid_amount = 100 # means 100 cent
+			daily_budget = 1000 # means 10 dollars most spent every day
+			# is_autbid decide whether to use autobid
 		
 			# now
 			cur_time = int(time.time())
@@ -85,9 +110,24 @@ class AdSetManager(BasicManager):
 			optimization_goal = AdSet.OptimizationGoal.app_installs
 			
 			# targeting IOS example
-			adset_target_dict = {"geo_locations": {"countries": ["US"]}, "age_max": "42", "page_types": ["mobilefeed"], "user_os": ["iOS_ver_6.0_and_above"], "age_min": "28", "genders": [1]}
+			adset_target_dict = {
+				"geo_locations": {"countries": ["US"]}, 
+				"age_max": "42", 
+				"page_types": ["mobilefeed"], 
+				"user_os": ["iOS_ver_6.0_and_above"], 
+				"age_min": "28", 
+				"genders": [1]
+			}
+
 			# targeting Android example
-			#adset_target_dict = {"geo_locations": {"countries": ["US"]}, "age_max": "42", "page_types": ["mobilefeed"], "user_os": ["Android_ver_2.3_and_above"], "age_min": "28", "genders": [1]}
+			adset_target_dict = {
+				"geo_locations": {"countries": ["US"]}, 
+				"age_max": "42", 
+				"page_types": ["mobilefeed"], 
+				"user_os": ["Android_ver_2.3_and_above"],
+				"age_min": "28", 
+				"genders": [1]
+			}
 
 			def callback_success(response, adset_info = []):
 				''' nothing to do for success'''
@@ -100,7 +140,7 @@ class AdSetManager(BasicManager):
 				error_info_dict['body']= response_error.body()
 				try:
 					error_user_msg = error_info_dict['body']['error']['error_user_msg']
-				except Exception as e:
+				except KeyErro as e:
 					error_reasons.append(error_info_dict)
 				else:
 					error_reasons.append(error_user_msg)
@@ -130,7 +170,7 @@ class AdSetManager(BasicManager):
 					AdSet.Field.optimization_goal: optimization_goal,
 					AdSet.Field.bid_amount: bid_amount,
 					AdSet.Field.promoted_object: promoted_object,
-					AdSet.Field.lifetime_budget: str(10000),
+					AdSet.Field.lifetime_budget: str(daily_budget),
 					AdSet.Field.created_time: str(cur_time),
 					AdSet.Field.start_time: str(begin_time),
 					AdSet.Field.end_time: str(end_time),
@@ -150,57 +190,42 @@ class AdSetManager(BasicManager):
 			logger.exception(e)
 
 	def delete_adset(self, fb_adset_id, logger):
-		''' delete adset'''
+		""" delete adset"""
 		try:
 			logger.debug('delete fb_adset_id %d' % fb_adset_id)
 			if fb_adset_id > 0:
 				adset = AdSet(str(fb_adset_id))
 				adset.remote_delete()
+
 		except Exception as e:
 			logger.exception(e)
 
-	def paused_adset(self, fb_adset_id, logger):
+	def update_adset_status(self, fb_adset_id, status, logger):
 		try:
+			# status = AdSet.Status.paused
 			print fb_adset_id
 			adset = AdSet(str(fb_adset_id))
 			adset.update({
-				AdSet.Field.status: AdSet.Status.paused,
+				AdSet.Field.status: status,
 			})
-			print str(adset[AdSet.Field.status])
 			adset.remote_update()
+
 		except Exception as e:
 			logger.exception(e)
 
-	def get_adset_status(self, adset_id, logger):
+	def get_adset_status(self, fb_adset_id, logger):
 		try:
-			print 'adset', adset_id
-			adset = AdSet(str(adset_id))
+			print fb_adset_id
+			adset = AdSet(str(fb_adset_id))
 			adset.remote_read(fields=[
 				AdSet.Field.id,
 				AdSet.Field.status,
 				AdSet.Field.targeting
 			])
 			print 'adset_status', adset[AdSet.Field.id], adset[AdSet.Field.status]
-			targeting = adset[AdSet.Field.targeting]
-			print targeting
+
 		except Exception as e:
 			logger.exception(e)
-
-	def generate_batches(self, iterable, batch_size_limit):
-		"""
-		Generator that yields lists of length size batch_size_limit containing
-		objects yielded by the iterable.
-		"""
-		batch = []
-
-		for item in iterable:
-			if len(batch) == batch_size_limit:
-				yield batch
-				batch = []
-			batch.append(item)
-
-		if len(batch):
-			yield batch
 
 	def get_adsets_under_account(self, fb_account_id, logger):
 		total_adsets = []
